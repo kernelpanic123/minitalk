@@ -6,29 +6,41 @@
 /*   By: abtouait <abtouait@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/26 08:58:29 by abtouait          #+#    #+#             */
-/*   Updated: 2025/04/26 09:52:37 by abtouait         ###   ########.fr       */
+/*   Updated: 2025/04/28 04:40:26 by abtouait         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
-void    handle_signal(int sig)
+unsigned char	bin_to_char(unsigned char c, int bit)
 {
-    if (sig == SIGUSR1)
-        write(1, "1", 1);
-    else if (sig == SIGUSR2)
-        write(1, "0", 1);
+	return ((c << 1) | (bit & 1));
 }
-int main(void)
-{
-    __pid_t pid;
 
-    pid = getpid();
-    ft_printf("PID = %d", pid);
-    signal(SIGUSR1, handle_signal);
-	signal(SIGUSR2, handle_signal);
-    while (1)
-    {
-        pause();
-    }
+void	handler(int sig)
+{
+	static unsigned char	c = 0;
+	static int				byte_count = 0;
+
+	if (sig == SIGUSR1)
+		c = bin_to_char(c, 0);
+	else if (sig == SIGUSR2)
+		c = bin_to_char(c, 1);
+	byte_count++;
+	if (byte_count == 8)
+	{
+		write(1, &c, 1);
+		c = 0;
+		byte_count = 0;
+	}
+}
+
+int	main(void)
+{
+	ft_printf("PID = %d\n", getpid());
+	signal(SIGUSR1, handler);
+	signal(SIGUSR2, handler);
+	while (1)
+		pause();
+	return (0);
 }
